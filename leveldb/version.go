@@ -37,7 +37,7 @@ type version struct {
 	cSeek unsafe.Pointer
 
 	closing  bool
-	ref      int
+	ref      int32
 	released bool
 }
 
@@ -53,7 +53,8 @@ func (v *version) incref() {
 		panic("already released")
 	}
 
-	v.ref++
+	atomic.AddInt32(&v.ref, 1)
+	//v.ref++
 	if v.ref == 1 {
 		select {
 		case v.s.refCh <- &vTask{vid: v.id, files: v.levels, created: time.Now()}:
@@ -65,7 +66,8 @@ func (v *version) incref() {
 }
 
 func (v *version) releaseNB() {
-	v.ref--
+	//v.ref--
+	atomic.AddInt32(&v.ref, -1)
 	if v.ref > 0 {
 		return
 	} else if v.ref < 0 {
@@ -82,9 +84,9 @@ func (v *version) releaseNB() {
 }
 
 func (v *version) release() {
-	v.s.vmu.Lock()
+	//v.s.vmu.Lock()
 	v.releaseNB()
-	v.s.vmu.Unlock()
+	//v.s.vmu.Unlock()
 }
 
 func (v *version) walkOverlapping(aux tFiles, ikey internalKey, f func(level int, t *tFile) bool, lf func(level int) bool) {
@@ -564,10 +566,10 @@ type versionReleaser struct {
 
 func (vr *versionReleaser) Release() {
 	v := vr.v
-	v.s.vmu.Lock()
+	//v.s.vmu.Lock()
 	if !vr.once {
 		v.releaseNB()
 		vr.once = true
 	}
-	v.s.vmu.Unlock()
+	//v.s.vmu.Unlock()
 }

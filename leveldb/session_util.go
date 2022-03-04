@@ -251,8 +251,8 @@ func (s *session) refLoop() {
 // Get current version. This will incr version ref, must call
 // version.release (exactly once) after use.
 func (s *session) version() *version {
-	s.vmu.Lock()
-	defer s.vmu.Unlock()
+	//s.vmu.Lock()
+	//defer s.vmu.Unlock()
 	s.stVersion.incref()
 	return s.stVersion
 }
